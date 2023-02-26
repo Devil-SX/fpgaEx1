@@ -1,3 +1,12 @@
+/*
+ * @Author: Devil-SX 987249586@qq.com
+ * @Date: 2023-02-26 11:20:05
+ * @LastEditors: Devil-SX 987249586@qq.com
+ * @LastEditTime: 2023-02-26 11:20:11
+ * @Description: 
+ * 
+ * Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
+ */
 module clk_divider
   #(parameter DIVISOR = 6'd0)   
    (

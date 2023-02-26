@@ -1,3 +1,14 @@
+/*
+ * @Author: Devil-SX 987249586@qq.com
+ * @Date: 2023-02-26 11:25:43
+ * @LastEditors: Devil-SX 987249586@qq.com
+ * @LastEditTime: 2023-02-26 21:03:47
+ * @Description: UART 接收模块
+  1.单state和state_cur/state_next的选择：前者少一个时钟周期时延，后者代码结构可以写得更加清晰（三段式状态机）。这里选择前者简化设计思路。
+  2.Moore和Mealy的选择：很显然输出和输入相关,但用if-case语句描述后，很难分清Mealy和Moore了。
+ * Copyright (c) 2023 by Devil-SX, All Rights Reserved. 
+ */
+
 module uart_rx_op
   #(
     parameter VERIFY_ON = 1'b0,
@@ -11,53 +22,66 @@ module uart_rx_op
     output reg       dataout_valid_o,
     output reg [7:0] dataout_o 
     );
-
-  always@(negedge resetn_i) begin
-		dataout_valid_o <= 1'b0;
-		dataout_o <= 8'b0;
-  end
-
-	// state machine
+	
+	// Defines
+	localparam IDLE_BIT = 1'b1;
+	localparam VALID_SET = 1'b1;
+	localparam DEFALUT_OUT = 8'b0;
+	// State
 	localparam IDLE = 3'd0;
 	localparam DATA = 3'd1;
 	localparam CHECK = 3'd2;
-	localparam END = 3'd3;
+	localparam END_BIT = 3'd3;
 
+
+	// State Machine
   reg[2:0] state;
-	reg[2:0] count;
-	reg check_flag;
+	reg[2:0] bit_sel;
+  reg[7:0] data;
+	reg check_temp;
 
   always@(posedge clk_en_i or negedge resetn_i) begin
     if(!resetn_i) begin
-			state <= 3'd0;
-			count <= 3'd0;
-			check_flag <= 1'b0;
+      state <= IDLE;
+      dataout_valid_o <= ~VALID_SET;
+      dataout_o <= DEFALUT_OUT; 
+			bit_sel <= 3'd0;
+			check_temp <= 1'b0;
     end 
     else begin
 			case(state)
-				IDLE:	if(!uart_rx_i) state <= DATA;
-				DATA:	
-					begin
-						dataout_o[count] <= uart_rx_i;
-						if(count == 3'd7) begin
-							if(VERIFY_ON) state <= CHECK;
-							else begin
-								state<= END;
-								dataout_valid_o <= 1'b1;
-							end
+				IDLE:	
+					if(uart_rx_i!=IDLE_BIT) begin
+            dataout_o <= DEFALUT_OUT;
+						dataout_valid_o <= ~VALID_SET;
+            state <= DATA;
+          end
+
+				DATA:	begin
+						data[bit_sel] <= uart_rx_i;
+						if(bit_sel == 3'd7) begin
+              bit_sel <= 3'd0;
+							if(VERIFY_ON) 
+								state <= CHECK;
+							else 
+								dataout_valid_o <= VALID_SET;
+                dataout_o <= data;
+								state<= END_BIT;
 						end else
 							count <= count + 1;
 					end
-				CHECK:	
-					begin
-						check_flag <= ^dataout_o;
-						if(check_flag != VERIFY_EVEN) dataout_valid_o <= 1'b1;
-						else dataout_valid_o <= 1'b0;
-						state <= END;
+
+				CHECK: begin
+						check <= ^data;
+						if(check != VERIFY_EVEN) begin
+							dataout_valid_o <= VALID_SET;
+              dataout_o <= data;
+            end
+						else dataout_valid_o <= ~VALID_SET;
+						state <= END_BIT;
 					end
-				END:
-					begin
-						dataout_valid_o <= 1'b0;
+
+				END_BIT: begin
 						state <= IDLE;
 					end
 				default:
@@ -65,6 +89,4 @@ module uart_rx_op
 		end
   end
 
-
-	
-	endmodule
+endmodule

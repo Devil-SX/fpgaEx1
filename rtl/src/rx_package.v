@@ -36,3 +36,4 @@ module rx_package
     output reg [TOGGLE:0]         frame_interrupt = 0
     );
 
+endmodule
