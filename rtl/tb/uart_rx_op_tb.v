@@ -24,6 +24,7 @@ uart_rx_op #(
   .dataout_valid_o(dataout_valid)
 );
 
+
 clk_divider #(
   .DIVISOR(7) // 8 分频
 ) clk_divider_1(
@@ -31,6 +32,7 @@ clk_divider #(
   .resetn_i(resetn),
   .clk_en_o(clk_en)
 );
+
 
 initial begin
   resetn = 1'b0;
@@ -76,6 +78,8 @@ initial begin
 end
 
 initial begin
+  $dumpfile("./wave/uart_rx_op_tb.vcd");
+  $dumpvars(1, uart_rx_op_tb);
   #2200 $finish;
 end
 

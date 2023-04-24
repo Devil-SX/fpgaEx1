@@ -113,7 +113,7 @@ module uart_tx_op
         IDLE: begin
           bit_sel <= 3'b0;
           uart_tx_o <= IDLE_BIT;
-          uart_busy_o <= ~BUSY_SET;
+          // uart_busy_o <= ~BUSY_SET; // 这个在clk_i域里面
         end
 
         START: begin
@@ -134,6 +134,7 @@ module uart_tx_op
 
         END_BIT: begin
           uart_tx_o <= ~IDLE_BIT;
+          uart_busy_o <= ~BUSY_SET;
         end
 
         default: begin
