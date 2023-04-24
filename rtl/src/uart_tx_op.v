@@ -39,49 +39,90 @@ module uart_tx_op
       if(uart_busy_o != BUSY_SET && shoot_i == SHOOT_SET) begin // Sampling
         shoot_flag <= shoot_i;
         uart_busy_o <= BUSY_SET;
-        datain <= datain_i;
+        datain <= datain_i; // Sampling
       end
     end
   end
 
 
   //* clk_en_i domain
-  // State Machine
+  // 三段式状态机
   reg[2:0] state;
+  reg[2:0] next_state;
   reg[2:0] bit_sel;
 
   always@(posedge clk_en_i or negedge resetn_i) begin
     if(!resetn_i) begin
       state <= IDLE;
+      next_state <= IDLE;
+    end
+    else begin
+      state <= next_state;
+    end
+  end
+
+
+  always@(*) begin
+    case (state)
+      IDLE: begin
+        if(shoot_flag == SHOOT_SET) begin
+          next_state = START;
+          shoot_flag = ~SHOOT_SET;
+        end
+      end
+
+      START: begin
+        next_state = DATA;
+      end
+
+      DATA: begin
+        if(bit_sel == 3'd7) begin
+          if(VERIFY_ON) begin
+            next_state = CHECK;
+          end else begin
+            next_state = END_BIT;
+          end
+        end else begin
+          next_state = DATA;
+        end
+      end
+
+      CHECK: begin
+        next_state = END_BIT;
+      end
+
+      END_BIT: begin
+        next_state = IDLE;
+      end
+
+      default: begin
+        next_state = IDLE;
+      end
+    endcase
+  end
+
+
+  always@(posedge clk_en_i or negedge resetn_i) begin
+    if(!resetn_i) begin
       bit_sel <= 3'b0;    
       uart_tx_o <= IDLE_BIT;
+      uart_busy_o <= ~BUSY_SET;
     end
     else begin
       case (state)
         IDLE: begin
+          bit_sel <= 3'b0;
           uart_tx_o <= IDLE_BIT;
-          if(shoot_flag == SHOOT_SET) begin
-            shoot_flag <= ~SHOOT_SET;
-            state <= START;
-          end else
-            uart_busy_o <= ~BUSY_SET;
+          uart_busy_o <= ~BUSY_SET;
         end
 
-        START:  begin
+        START: begin
           uart_tx_o <= ~IDLE_BIT;
-          state <= DATA;
         end
 
         DATA: begin
           uart_tx_o <= datain[bit_sel];
-          if(bit_sel == 3'd7) begin
-            bit_sel <= 3'd0;
-            if(VERIFY_ON)
-              state <= CHECK;
-            else
-              state <= END_BIT;
-          end else
-            bit_sel <= bit_sel + 1;
+          bit_sel <= bit_sel + 1;
         end
 
         CHECK: begin
@@ -89,12 +130,14 @@ module uart_tx_op
             uart_tx_o <= ^datain;
           else
             uart_tx_o <= ~^datain;
-          state <= END_BIT;
         end
 
         END_BIT: begin
           uart_tx_o <= ~IDLE_BIT;
-          state <= IDLE;
+        end
+
+        default: begin
+          uart_tx_o <= IDLE_BIT;
         end
       endcase
     end

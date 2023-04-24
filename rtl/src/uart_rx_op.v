@@ -37,6 +37,7 @@ module uart_rx_op
     if(!resetn_i) begin
       state <= IDLE;
       next_state <= IDLE;
+    end
     else begin
       state <= next_state;
     end
@@ -77,6 +78,7 @@ module uart_rx_op
   always @(posedge clk_en_i or negedge resetn_i) begin
     if(!resetn_i) begin
       bit_sel <= 3'b0;
+      dataout_o <= DEFALUT_OUT;
       data <= DEFALUT_OUT;
       check_temp <= ~VERIFY_EVEN;
       valid_flag <= ~VALID_SET;
@@ -102,6 +104,7 @@ module uart_rx_op
           if((VERIFY_EVEN && check_temp == 1'b0) ||
               (!VERIFY_EVEN && check_temp == 1'b1)
           ) begin
+            dataout_o <= data;
             valid_flag <= VALID_SET;
           end
         end
@@ -114,7 +117,7 @@ module uart_rx_op
 
   // clk_i domain
   // 发出一个时钟周期的有效信号
-  always @(posedge clk or negedge resetn_i) begin
+  always @(posedge clk_i or negedge resetn_i) begin
     if(!resetn_i) begin
       dataout_valid_o <= ~VALID_SET;
       valid_flag <= ~VALID_SET;

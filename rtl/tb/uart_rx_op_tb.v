@@ -12,10 +12,10 @@ wire [7:0] dataout;
 wire dataout_valid;
 
 
-uart_rx_op(
-  .VERIFY_ON=1'b1,
-  .VERIFY_EVEN=1'b1
-) .uart_rx_op_1(
+uart_rx_op #(
+  .VERIFY_ON(1'b1),
+  .VERIFY_EVEN(1'b1)
+) uart_rx_op_1(
   .clk_i(clk),
   .resetn_i(resetn),
   .clk_en_i(clk_en),
@@ -24,13 +24,13 @@ uart_rx_op(
   .dataout_valid_o(dataout_valid)
 );
 
-clk_divider(
-  .DIVISOR(8)
-) .clk_divider_1(
+clk_divider #(
+  .DIVISOR(7) // 8 分频
+) clk_divider_1(
   .clk_i(clk),
   .resetn_i(resetn),
   .clk_en_o(clk_en)
-)
+);
 
 initial begin
   resetn = 1'b0;
@@ -76,7 +76,7 @@ initial begin
 end
 
 initial begin
-  #2000 $finish;
+  #2200 $finish;
 end
 
 endmodule
