@@ -46,53 +46,12 @@ module rx_package
     output reg [TOGGLE:0]         frame_interrupt = 0
     );
 
-localparam BYTE = 8;
-localparam FIFO_OUT_CUT = 8;
-localparam IDLE = 2'd0;
-localparam DATA = 2'd1;
+
+localparam WAIT_FOR_SOF = 2'b0;
+localparam WAIT_FOR_EOF = 2'b1;
 
 
-// FIFO
-reg[5:0] read_bytes;
-reg r_en;
-reg[OUTCUT*BYTE-1:0] data_o;
-fifo_mo #(/*autoinstparam_value*/
-        .OUTCUT                 (FIFO_OUT_CUT                              ),
-        .FIFO_LENGTH            (100                            ) 
-    )
-  fifo(/*AutoInst*/
-        .clk                    (clk                            ), //input
-        .resetn                 (resetn                         ), //input
-        .enable                 (enable                         ), //input
-        .data_i                 (rx_data[7:0]                    ), //input
-        .w_en                   (rx_data_valid                           ), //input
-        .r_en                   (r_en                           ), //input
-        .r_count                (read_bytes[5:0]                        ), //input
-        .data_o                 (data_o[OUTCUT*BYTE-1:0]           ), //output
-        .full                   (FIFO_clear                           )  //output
-    );
-
-// State Machine
-// IDLE --> DATA : SOF Detection
-// DATA --> ILDE : EOF Detection or FrameLength
-reg state;
-always @(posedge clk or negedge resetn) begin
-  if(!resetn) begin
-    state <= 1'b0;
-    read_bytes <= 0;
-  end else begin
-    case (state)
-      IDLE: begin
-        
 
 
-      default: 
-    endcase
-
-end
-
-
-// SOF
-reg[]
 
 endmodule

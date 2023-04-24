@@ -1,13 +1,3 @@
-/*
- * @Author: Devil-SX 987249586@qq.com
- * @Date: 2023-02-22 15:22:09
- * @LastEditors: Devil-SX 987249586@qq.com
- * @LastEditTime: 2023-02-26 21:13:40
- * @Description: UART 发射模块
-  1.单state和state_cur/state_next的选择：前者少一个时钟周期时延，后者代码结构可以写得更加清晰（三段式状态机）。这里选择前者简化设计思路。
-  2.Moore和Mealy的选择：很显然输出和输入相关,但用if-case语句描述后，很难分清Mealy和Moore了。
- * Copyright (c) 2023 by Devil-SX, All Rights Reserved. 
- */
 module uart_tx_op
   #(
     parameter VERIFY_ON = 1'b0,
@@ -28,11 +18,11 @@ module uart_tx_op
   localparam SHOOT_SET = 1'b1;
   localparam BUSY_SET = 1'b1;
   // States
-	localparam IDLE = 3'd0;
-	localparam START = 3'd1;
-	localparam DATA = 3'd2;
-	localparam CHECK = 3'd3;
-	localparam END_BIT = 3'd4;
+  localparam IDLE = 3'd0;
+  localparam START = 3'd1;
+  localparam DATA = 3'd2;
+  localparam CHECK = 3'd3;
+  localparam END_BIT = 3'd4;
 
   
   //* clk_i domain
